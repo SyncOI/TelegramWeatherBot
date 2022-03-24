@@ -14,10 +14,12 @@ import ru.syncoi.telegrambot.command.SettingCommand;
 import ru.syncoi.telegrambot.command.StartCommand;
 import ru.syncoi.telegrambot.exception.CommandNotFoundException;
 import ru.syncoi.telegrambot.exception.MessageTextIncorrectException;
+import ru.syncoi.telegrambot.exception.UnknownCallbackException;
 import ru.syncoi.telegrambot.model.ChatStatus;
 import ru.syncoi.telegrambot.model.UserSettings;
 import ru.syncoi.telegrambot.service.ChatStatusService;
 import ru.syncoi.telegrambot.service.UserSettingsService;
+import ru.syncoi.telegrambot.util.MessageUtil;
 import ru.syncoi.telegrambot.util.SendMessageUtil;
 import ru.syncoi.telegrambot.util.UpdateUtil;
 
@@ -57,23 +59,27 @@ public class Bot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         long chatId = UpdateUtil.getChatId(update);
-        ChatStatus chatStatus = chatStatusService.getById(chatId).orElse(new ChatStatus(chatId));
-        UserSettings userSettings = userSettingsService.getById(chatId).orElse(new UserSettings(chatId));
-
-        if (!StringUtils.hasLength(chatStatus.getId())) {
-            chatStatusService.create(chatStatus);
-        }
-        if (!StringUtils.hasLength(userSettings.getId())) {
-            userSettingsService.create(userSettings);
-        }
+        ChatStatus chatStatus = chatStatusService
+                .getById(chatId)
+                .orElseGet(() -> chatStatusService.create(new ChatStatus(chatId)));
+        UserSettings userSettings = userSettingsService
+                .getById(chatId)
+                .orElseGet(() -> userSettingsService.create(new UserSettings(chatId)));
+        UpdateUtil.MessageType messageType = UpdateUtil.getMessageType(update);
 
         try {
-            if (UpdateUtil.isCommand(update)) {
-                processCommand(update, userSettings, chatStatus);
-            } else {
-                processNonCommand(update, userSettings, chatStatus);
+            switch (messageType) {
+                case CALLBACK:
+                    processCallback(update, userSettings, chatStatus);
+                    break;
+                case COMMAND:
+                    processCommand(update, userSettings, chatStatus);
+                    break;
+                case MESSAGE:
+                    processNonCommand(update, userSettings, chatStatus);
+                    break;
             }
-        } catch (CommandNotFoundException | MessageTextIncorrectException e) {
+        } catch (CommandNotFoundException | MessageTextIncorrectException | UnknownCallbackException e) {
             try {
                 execute(SendMessageUtil.createSendMessage(userSettings, e.getMessage()));
             } catch (TelegramApiException ex) {
@@ -85,7 +91,9 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void processCommand(Update update, UserSettings userSettings, ChatStatus chatStatus) throws CommandNotFoundException, TelegramApiException {
-        String textMessage = UpdateUtil.getTextMessage(update);
+        String textMessage = MessageUtil.getTextMessage(
+                UpdateUtil.getMessage(update)
+        );
         Command command = commands.get(textMessage);
         if (command == null) {
             throw new CommandNotFoundException("Команда '" + textMessage + "' не найдена.");
@@ -94,12 +102,36 @@ public class Bot extends TelegramLongPollingBot {
         execute(command.execute(userSettings, chatStatus));
     }
 
-    private void processNonCommand(Update update, UserSettings userSettings, ChatStatus chatStatus) throws MessageTextIncorrectException {
-        String textMessage = UpdateUtil.getTextMessage(update);
+    private void processNonCommand(Update update, UserSettings userSettings, ChatStatus chatStatus) throws MessageTextIncorrectException, TelegramApiException {
+        String textMessage = MessageUtil.getTextMessage(
+                UpdateUtil.getMessage(update)
+        );
 
-        if ("".equals(textMessage)) {
+        if (chatStatus.getState().equals("edit_setting")) {
+            userSettings.getSettings().put(chatStatus.getSettingForEditing(), textMessage);
+            chatStatus.setState("");
+            chatStatus.setSettingForEditing("");
+            userSettingsService.update(userSettings);
+            chatStatusService.update(chatStatus);
+            execute(SendMessageUtil.createSendMessage(userSettings, "Значение установлено."));
+        } else if ("".equals(textMessage)) {
             throw new MessageTextIncorrectException("Сообщение пустое");
         }
+    }
+
+    private void processCallback(Update update, UserSettings userSettings, ChatStatus chatStatus) throws TelegramApiException, UnknownCallbackException {
+        String data = update.getCallbackQuery().getData();
+
+        if (data.startsWith(SettingCommand.CALLBACK_DATA)) {
+            chatStatus.setState("edit_setting");
+            chatStatus.setSettingForEditing(data.substring(SettingCommand.CALLBACK_DATA.length()));
+            chatStatusService.update(chatStatus);
+
+            execute(SendMessageUtil.createSendMessage(userSettings, "Введите значение настройки"));
+        } else {
+            throw new UnknownCallbackException();
+        }
+
     }
 
     private void register(Command command) {

@@ -15,4 +15,6 @@ public class ChatStatus {
     private String id;
     private final long chatId;
     private String state = "";
+
+    private String settingForEditing;
 }

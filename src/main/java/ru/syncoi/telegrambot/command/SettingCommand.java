@@ -13,9 +13,12 @@ import ru.syncoi.telegrambot.util.SendMessageUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class SettingCommand implements Command {
+
+    public static final String CALLBACK_DATA = "set_setting_";
 
     private ChatStatusService chatStatusService;
 
@@ -37,7 +40,14 @@ public class SettingCommand implements Command {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
-        rowInline.add(InlineKeyboardButton.builder().text("Setting 1").callbackData("asdf").build());
+        rowInline.add(InlineKeyboardButton.builder()
+                .text("Lat: " + Optional.ofNullable(userSettings.getSettings().get(UserSettings.SETTING_LAT)).orElse(""))
+                .callbackData(CALLBACK_DATA + UserSettings.SETTING_LAT)
+                .build());
+        rowInline.add(InlineKeyboardButton.builder()
+                .text("Lon: " + Optional.ofNullable(userSettings.getSettings().get(UserSettings.SETTING_LON)).orElse(""))
+                .callbackData(CALLBACK_DATA + UserSettings.SETTING_LON)
+                .build());
         rowsInline.add(rowInline);
         markupInline.setKeyboard(rowsInline);
 
