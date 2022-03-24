@@ -10,6 +10,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.syncoi.telegrambot.command.Command;
+import ru.syncoi.telegrambot.command.CurrentWeatherCommand;
 import ru.syncoi.telegrambot.command.SettingCommand;
 import ru.syncoi.telegrambot.command.StartCommand;
 import ru.syncoi.telegrambot.exception.CommandNotFoundException;
@@ -44,6 +45,7 @@ public class Bot extends TelegramLongPollingBot {
 
         register(context.getBean(StartCommand.class));
         register(context.getBean(SettingCommand.class));
+        register(context.getBean(CurrentWeatherCommand.class));
     }
 
     @Override

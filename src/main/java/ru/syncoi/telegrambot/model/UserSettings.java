@@ -25,4 +25,5 @@ public class UserSettings {
     private final long chatId;
     private HashMap<String, String> settings = new HashMap();
 
+    private void setSettings() {}
 }
