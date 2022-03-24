@@ -14,6 +14,7 @@ public class StartCommand implements Command {
     private final String name = "/start";
 
     public SendMessage execute(UserSettings userSettings, ChatStatus chatStatus) {
-        return SendMessageUtil.createSendMessage(userSettings, "Маладес");
+        return SendMessageUtil.createSendMessage(userSettings,
+                "Добро пожаловать! Перед получением погоды заполните настройки");
     }
 }
