@@ -1,5 +1,27 @@
 # Telegram Weather Bot
 Telegram bot to show weather by coordinates
+## Installation
+Fill in the configuration data before installation (see "Configuration").
+
+If you use make, then use:
+```
+#docker-compose version
+make run-docker
+
+#without docker-compose
+make run
+```
+if not use:
+```
+#docker-compose version
+mvn clean install
+docker-compose build
+docker-compose up
+
+#without docker-compose
+mvn clean install
+java -jar target/app.jar
+```
 ## Configuration
 Before working, you need to fill out the `application.properties` file:
 ```properties
