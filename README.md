@@ -30,9 +30,7 @@ bot.username=<bot's telegram name, you can get it from @BotFather>
 bot.token=<bot's telegram token, you can get it from @BotFather>
 
 #mongo
-spring.data.mongodb.host=<MongoDB host, not needed when running through docker compose>
-spring.data.mongodb.port=<MongoDB port, not needed when running through docker compose>
-spring.data.mongodb.database=<MongoDB database, not needed when running through docker compose>
+spring.data.mongodb.uri=<MongoDB uri, not needed when running through docker compose, for example: mongodb://localhost:27017/test?retryWrites=true&w=majority>
 
 #openweather
 openweather.apikey=<ApiKey OpenWeather, you can get it from https://openweathermap.org/>
