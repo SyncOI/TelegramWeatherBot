@@ -1,7 +1,7 @@
 # Telegram Weather Bot
 Telegram bot to show weather by coordinates
 
-[Bot link](t.me/syncoiweather_bot), hosted at heroku + Mongo Atlas
+[Bot link](t.me/syncoiweather_bot), hosted by heroku + Mongo Atlas
 ## Installation
 Fill in the configuration data before installation (see "Configuration").
 
